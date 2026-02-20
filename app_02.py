@@ -1,8 +1,8 @@
 import streamlit as st
-import sqlite3
 import pandas as pd
 import time
 import io
+from streamlit_gsheets import GSheetsConnection
 
 # ==========================================
 # 1. CONFIGURATION & CSS (Styling)
@@ -26,60 +26,71 @@ st.markdown("""
 # 2. DATABASE FUNCTIONS (Backend)
 # ==========================================
 
+conn = st.connection("gsheets", type=GSheetsConnection)
 def load_data():
-    conn = sqlite3.connect('my_batches.db')
-    query = """
-        SELECT batches.id, batches.batch_name, batches.amount, 
-               categories.name as Category, batches.date, batches.class_grade
-        FROM batches
-        JOIN categories ON batches.category_id = categories.id
-    """
-    df = pd.read_sql(query, conn)
-    conn.close()
+    """Google Sheet se fresh data lana"""
+    # ttl=0 matlab cache mat karo, hamesha live data lao
+    sheet_url = "https://docs.google.com/spreadsheets/d/18zymh_fCP9MUng5reeMhh7-HHR-tdu-cGiR-E9_TQ1c/edit?usp=sharing" # Agar secrets mein nahi hai toh
+    df = conn.read(spreadsheet=sheet_url, ttl=0)
+    df = df.dropna(how="all")
     
+    # Columns ko rename kar do taaki tumhara purana Search wala code chale
     df = df.rename(columns={
-        "batch_name": "Batch Name", "amount": "Price",
-        "date": "Date", "class_grade": "Class"
+        "batch_name": "Batch Name", 
+        "amount": "Price",
+        "category": "Category",
+        "date": "Date",
+        "class_grade": "Class"
     })
-    
-    if not df.empty:
-        df['Date'] = pd.to_datetime(df['Date'])
-    return df
 
 def add_new_batch(batch_name, category_id, amount, batch_date, batch_class_grade):
+    """Nayi row Google Sheet mein jodne ke liye"""
     try:
-        conn = sqlite3.connect("my_batches.db")
-        cursor = conn.cursor()
-        query = "INSERT INTO batches (batch_name, category_id, amount, date, class_grade) VALUES (?,?,?,?,?)"
-        cursor.execute(query, (batch_name, category_id, amount, batch_date, batch_class_grade))
-        conn.commit(); conn.close()
+        existing_df = load_data()
+        # Naya data purane data ke niche lagana
+        updated_df = pd.concat([existing_df, pd.DataFrame([new_row_list])], ignore_index=True)
+        # Sheet par wapas bhejna
+        conn.update(data=updated_df)
         return True
-    except:
+    except Exception as e:
+        st.error(f"Error: {e}")
         return False
 
 def del_batches(batch_id):
     try:
-        conn = sqlite3.connect('my_batches.db')
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM batches WHERE id = ?", (batch_id,))
-        conn.commit(); conn.close()
+        # 1. Fresh data lao
+        df = load_data()
+        
+        # 2. Sirf wo rows rakho jinki ID match NAHI karti (Matlab target id ud gayi)
+        # Humne 'id' column ko string mein convert kiya hai safe side ke liye
+        df = df[df['id'].astype(str) != str(batch_id)]
+        
+        # 3. Baaki bacha hua data Sheet par wapas bhej do
+        conn.update(data=df)
         return True
-    except:
+    except Exception as e:
+        st.error(f"Delete Error: {e}")
         return False
 
 def update_batch_details(batch_id, new_name, new_price, new_date, new_grade):
     try:
-        conn = sqlite3.connect('my_batches.db')
-        cursor = conn.cursor()
-        query = """
-            UPDATE batches 
-            SET batch_name = ?, amount = ?, date = ?, class_grade = ?
-            WHERE id = ?
-        """
-        cursor.execute(query, (new_name, new_price, new_date, new_grade, batch_id))
-        conn.commit(); conn.close()
+        # 1. Fresh data lao
+        df = load_data()
+        
+        # 2. Check karo ki wo ID table mein kahan hai (Index dhoondo)
+        mask = df['id'].astype(str) == str(batch_id)
+        
+        # 3. Us specific jagah par naya data bhar do (.loc use karke)
+        df.loc[mask, 'batch_name'] = new_name
+        df.loc[mask, 'amount'] = new_price
+        df.loc[mask, 'date'] = str(new_date)
+        df.loc[mask, 'class_grade'] = new_grade
+        
+        # 4. Poora Updated Table wapas Sheet par upload kar do
+        conn.update(data=df)
         return True
-    except:
+    except Exception as e:
+        st.error(f"Update Error: {e}")
         return False
 
 def search_batches(df, search_query):
@@ -313,3 +324,4 @@ if not df.empty:
         else:
 
             st.info("No class data available for this filter.")
+
