@@ -92,44 +92,44 @@ def search_batches(df, search_query):
 
 
 # Login and Logout
-# def user_authentication():
-#     # 1. Memory check (Diary)
-#     if 'logged_in' not in st.session_state:
-#         st.session_state['logged_in'] = False
+def user_authentication():
+    # 1. Memory check (Diary)
+    if 'logged_in' not in st.session_state:
+        st.session_state['logged_in'] = False
 
-#     # 2. Agar Login hai, toh Sidebar mein Logout dikhao
-#     if st.session_state['logged_in']:
-#         st.sidebar.info(f"👤 Logged in as: Admin")
-#         if st.sidebar.button("🚪 Logout", use_container_width=True):
-#             st.session_state['logged_in'] = False
-#             st.rerun()
+    # 2. Agar Login hai, toh Sidebar mein Logout dikhao
+    if st.session_state['logged_in']:
+        st.sidebar.info(f"👤 Logged in as: Admin")
+        if st.sidebar.button("🚪 Logout", use_container_width=True):
+            st.session_state['logged_in'] = False
+            st.rerun()
             
-#     # 3. Agar Login nahi hai, toh Screen par Parda (Login Form) gira do
-#     else:
-#         # Page ke beech mein form lane ke liye columns ka use
-#         col1, col2, col3 = st.columns([1, 2, 1]) 
+    # 3. Agar Login nahi hai, toh Screen par Parda (Login Form) gira do
+    else:
+        # Page ke beech mein form lane ke liye columns ka use
+        col1, col2, col3 = st.columns([1, 2, 1]) 
         
-#         with col2:
-#             st.markdown("### 🔐 Admin Login")
-#             with st.container(border=True):
-#                 u_name = st.text_input("Username")
-#                 p_word = st.text_input("Password", type="password")
+        with col2:
+            st.markdown("### 🔐 Admin Login")
+            with st.container(border=True):
+                u_name = st.text_input("Username")
+                p_word = st.text_input("Password", type="password")
                 
-#                 # --- YE RAHI TUMHARI CHABHI (Credentials) ---
-#                 MY_USER = "admin"    # <--- Isko change kar sakte ho
-#                 MY_PASS = "bhopal123" # <--- Isko change kar sakte ho
+                # --- YE RAHI TUMHARI CHABHI (Credentials) ---
+                MY_USER = "admin"    # <--- Isko change kar sakte ho
+                MY_PASS = "bhopal123" # <--- Isko change kar sakte ho
                 
-#                 if st.button("Access Dashboard", use_container_width=True, type="primary"):
-#                     if u_name == MY_USER and p_word == MY_PASS:
-#                         st.session_state['logged_in'] = True
-#                         st.success("✅ Welcome Back!")
-#                         time.sleep(1)
-#                         st.rerun()
-#                     else:
-#                         st.error("❌ Invalid Username or Password")
+                if st.button("Access Dashboard", use_container_width=True, type="primary"):
+                    if u_name == MY_USER and p_word == MY_PASS:
+                        st.session_state['logged_in'] = True
+                        st.success("✅ Welcome Back!")
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error("❌ Invalid Username or Password")
         
-#         # SABSE JAROORI: Jab tak login nahi, tab tak neeche ka code mat chalao
-#         st.stop()
+        # SABSE JAROORI: Jab tak login nahi, tab tak neeche ka code mat chalao
+        st.stop()
         
 def convert_df_to_excel(df):
     # 1. Memory mein ek khali jagah banao (Buffer)
@@ -187,7 +187,7 @@ def show_edit_batch_form(target_id, current_data):
 st.title('🎓 Batch Management System')
 
 # 1. Sabse pehle Security Checkpost (Login Function) call karo
-# user_authentication()
+user_authentication()
 
 # ---------------------------------------------------------
 # 💡 AGAR CODE YAHAN TAK PAHUNCH GAYA HAI...
@@ -311,4 +311,5 @@ if not df.empty:
         if not class_revenue.empty:
             st.bar_chart(class_revenue)
         else:
+
             st.info("No class data available for this filter.")
