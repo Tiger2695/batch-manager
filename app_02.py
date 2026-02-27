@@ -169,8 +169,8 @@ def show_edit_batch_form(target_id, current_data):
             time.sleep(1)
             st.rerun()
 
-st.title('🎓 BatchMaster')
-st.subheader('Simple, Powerful, Professional.')
+st.title('🎓 BatchMaster By Chitransh')
+st.subheader('Simple • Powerful • Professional')
 
 
 user_authentication()
@@ -290,6 +290,7 @@ if not df.empty:
             st.bar_chart(class_revenue)
         else:
             st.info("No class data available for this filter.")
+
 
 
 
