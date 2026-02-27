@@ -9,12 +9,12 @@ st.set_page_config(page_title='Batch Manager', layout='centered')
 st.markdown("""
     <style>
     div.stButton > button[kind="primary"] {
-        position: fixed; bottom: 30px; right: 30px; 
+        position: fixed; bottom: 80px; right: 40px; 
         border-radius: 50%; width: 60px; height: 60px;
         font-size: 30px; box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
         z-index: 9999;
     }
-    div.stButton > button[kind="secondary"]:hover { transform: scale(1.1); }
+    div.stButton > button[kind="primary"]:hover { transform: scale(1.1); }
     </style>
 """, unsafe_allow_html=True)
 
@@ -280,3 +280,4 @@ if not df.empty:
             st.bar_chart(class_revenue)
         else:
             st.info("No class data available for this filter.")
+
