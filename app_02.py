@@ -246,7 +246,8 @@ if not df.empty:
     # Step 2: DUAL FILTERS
     col1, col2 = st.columns(2)
     with col1:
-        uni_cat = ['All Categories'] + searched_df['Category'].unique().tolist()
+        avail_cat = searched_df['Category'].unique().tolist()
+        uni_cat = ['All Categories'] + avail_cat
         sel_cat = st.selectbox("📂 Filter by Category", uni_cat)
         
     with col2:
@@ -311,7 +312,4 @@ if not df.empty:
         if not class_revenue.empty:
             st.bar_chart(class_revenue)
         else:
-
             st.info("No class data available for this filter.")
-
-
