@@ -131,7 +131,7 @@ def convert_df_to_excel(df):
     processed_data = output.getvalue()
     return processed_data
     
-@st.dialog("+ Add New Batch")
+@st.dialog("➕ Add New Batch")
 def show_add_batch_form():
     with st.form("add_batch_popup"):
         new_name = st.text_input("Name")
@@ -166,7 +166,7 @@ st.title('🎓 Batch Management System')
 
 user_authentication()
 
-if st.button("➕", type="primary"):
+if st.button("+", type="primary"):
     show_add_batch_form()
 
 try:
@@ -280,5 +280,6 @@ if not df.empty:
             st.bar_chart(class_revenue)
         else:
             st.info("No class data available for this filter.")
+
 
 
