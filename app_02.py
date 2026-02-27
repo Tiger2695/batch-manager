@@ -85,11 +85,15 @@ def search_batches(df, search_query):
 def user_authentication():
     if 'logged_in' not in st.session_state:
         st.session_state['logged_in'] = False
+        st.session_state['role'] = None
 
     if st.session_state['logged_in']:
-        st.sidebar.info(f"👤 Logged in as: Admin")
+        current_role = st.session_state.get('role', 'Unknown')
+        st.sidebar.info(f"👤 Logged in as: {current_role.capitalize()}")
+        
         if st.sidebar.button("🚪 Logout", use_container_width=True):
             st.session_state['logged_in'] = False
+            st.session_state['role'] = None
             st.rerun()
     else:
         col1, col2, col3 = st.columns([1, 2, 1]) 
@@ -100,12 +104,17 @@ def user_authentication():
                 u_name = st.text_input("Username")
                 p_word = st.text_input("Password", type="password")
                 
-                MY_USER = "admin"
-                MY_PASS = "bhopal123"
+                users = {
+                    "admin": {"pass": "bhopal123", "role": "admin"},
+                    "guest": {"pass": "guest123", "role": "viewer"},
+                    "manager": {"pass": "m123", "role": "manager"},
+                    "intern": {"pass": "intern123", "role": "viewer"}
+                }
                 
                 if st.form_submit_button("Access Dashboard", use_container_width=True, type="primary"):
-                    if u_name == MY_USER and p_word == MY_PASS:
+                    if u_name in users and p_word == users[u_name]["pass"]:
                         st.session_state['logged_in'] = True
+                        st.session_state['role'] = users[u_name]["role"]
                         st.success("✅ Welcome Back!")
                         time.sleep(1)
                         st.rerun()
@@ -177,16 +186,20 @@ if not df.empty:
             target_id = update_map[selected_update_name]
             show_edit_batch_form(target_id, df[df['id'] == target_id].iloc[0]) 
             
-    with st.sidebar.expander("🗑️ Delete Batch"):
-        del_map = {row['Batch Name']: row['id'] for i, row in df.iterrows()}
-        selected_del_name = st.selectbox("Select to Delete", list(del_map.keys()))
-        with st.expander(f"🗑️ Delete '{selected_del_name}'?", expanded=False):
-            st.error("⚠️ Are you sure you want to Delete it ?")
-            if st.button("Yes, Delete 🚨"): 
-                del_batches(del_map[selected_del_name])
-                st.success("Deleted!")
-                time.sleep(1)
-                st.rerun()
+    allowed_to_delete = ['admin', 'manager']
+    if st.session_state.get('role') in allowed_to_delete:
+        with st.sidebar.expander("🗑️ Delete Batch"):
+            del_map = {row['Batch Name']: row['id'] for i, row in df.iterrows()}
+            selected_del_name = st.selectbox("Select to Delete", list(del_map.keys()))
+        
+            with st.expander(f"🗑️ Delete '{selected_del_name}'?", expanded=False):
+                st.error("⚠️ Are you sure you want to Delete it ?")
+                
+                if st.button("Yes, Delete 🚨"): 
+                    del_batches(del_map[selected_del_name])
+                    st.success("Deleted!")
+                    time.sleep(1)
+                    st.rerun()
 
     st.divider()
     
