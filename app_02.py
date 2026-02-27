@@ -174,7 +174,7 @@ st.subheader('Simple • Powerful • Professional')
 
 
 user_authentication()
-st.ballons()
+st.balloons()
 
 if st.button("➕", type="primary"):
     show_add_batch_form()
@@ -290,6 +290,7 @@ if not df.empty:
             st.bar_chart(class_revenue)
         else:
             st.info("No class data available for this filter.")
+
 
 
 
