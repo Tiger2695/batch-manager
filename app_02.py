@@ -4,9 +4,6 @@ import pandas as pd
 import time
 import io
 
-# ==========================================
-# 1. CONFIGURATION & CSS (Styling)
-# ========================================== 
 st.set_page_config(page_title='Batch Manager', layout='centered')
 
 st.markdown("""
@@ -17,14 +14,9 @@ st.markdown("""
         font-size: 30px; box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
         z-index: 9999;
     }
-    div.stButton > button[kind="primary"]:hover { transform: scale(1.1); }
+    div.stButton > button[kind="secondary"]:hover { transform: scale(1.1); }
     </style>
 """, unsafe_allow_html=True)
-
-
-# ==========================================
-# 2. DATABASE FUNCTIONS (Backend)
-# ==========================================
 
 def load_data():
     conn = sqlite3.connect('my_batches.db')
@@ -90,36 +82,28 @@ def search_batches(df, search_query):
     match_id = df['id'].astype(str).str.contains(search_query, na=False)
     return df[match_name | match_id]
 
-
-# Login and Logout
 def user_authentication():
-    # 1. Memory check (Diary)
     if 'logged_in' not in st.session_state:
         st.session_state['logged_in'] = False
 
-    # 2. Agar Login hai, toh Sidebar mein Logout dikhao
     if st.session_state['logged_in']:
         st.sidebar.info(f"👤 Logged in as: Admin")
         if st.sidebar.button("🚪 Logout", use_container_width=True):
             st.session_state['logged_in'] = False
             st.rerun()
-            
-    # 3. Agar Login nahi hai, toh Screen par Parda (Login Form) gira do
     else:
-        # Page ke beech mein form lane ke liye columns ka use
         col1, col2, col3 = st.columns([1, 2, 1]) 
         
         with col2:
             st.markdown("### 🔐 Admin Login")
-            with st.container(border=True):
+            with st.form("login_form", border=True):
                 u_name = st.text_input("Username")
                 p_word = st.text_input("Password", type="password")
                 
-                # --- YE RAHI TUMHARI CHABHI (Credentials) ---
-                MY_USER = "admin"    # <--- Isko change kar sakte ho
-                MY_PASS = "bhopal123" # <--- Isko change kar sakte ho
+                MY_USER = "admin"
+                MY_PASS = "bhopal123"
                 
-                if st.button("Access Dashboard", use_container_width=True, type="primary"):
+                if st.form_submit_button("Access Dashboard", use_container_width=True, type="primary"):
                     if u_name == MY_USER and p_word == MY_PASS:
                         st.session_state['logged_in'] = True
                         st.success("✅ Welcome Back!")
@@ -127,27 +111,17 @@ def user_authentication():
                         st.rerun()
                     else:
                         st.error("❌ Invalid Username or Password")
-        
-        # SABSE JAROORI: Jab tak login nahi, tab tak neeche ka code mat chalao
         st.stop()
         
 def convert_df_to_excel(df):
-    # 1. Memory mein ek khali jagah banao (Buffer)
     output = io.BytesIO()
     
-    # 2. Pandas ko bolo ki is memory mein Excel file likh de
-    # index=False matlab humein row numbers (0, 1, 2) nahi chahiye Excel mein
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         df.to_excel(writer, index=False, sheet_name='Sheet1')
     
-    # 3. File ko tayyar karke wapas bhej do
     processed_data = output.getvalue()
     return processed_data
-        
-# ==========================================
-# 3. POPUP FORMS (Modals)
-# ==========================================
-
+    
 @st.dialog("➕ Add New Batch")
 def show_add_batch_form():
     with st.form("add_batch_popup"):
@@ -179,29 +153,13 @@ def show_edit_batch_form(target_id, current_data):
             time.sleep(1)
             st.rerun()
 
-
-# ==========================================
-# 4. MAIN UI & DASHBOARD
-# ==========================================
-
 st.title('🎓 Batch Management System')
 
-# 1. Sabse pehle Security Checkpost (Login Function) call karo
 user_authentication()
-
-# ---------------------------------------------------------
-# 💡 AGAR CODE YAHAN TAK PAHUNCH GAYA HAI...
-# Iska matlab hai ki user login ho chuka hai (st.stop() nahi chala)
-# ---------------------------------------------------------
-    
-# ------------------------------------------------------    
-# --- CREATE BATCH FLOATING BUTTON ---
-# ------------------------------------------------------
 
 if st.button("➕", type="primary"):
     show_add_batch_form()
 
-# --- LOAD DATA ---
 try:
     df = load_data()
 except Exception as e:
@@ -210,7 +168,6 @@ except Exception as e:
 
 if not df.empty:
     
-    # --- SIDEBAR (Edit & Delete) ---
     st.sidebar.header("⚙️ Manage Batches")
     
     with st.sidebar.expander("✏️ Edit Batch"):
@@ -221,29 +178,21 @@ if not df.empty:
             show_edit_batch_form(target_id, df[df['id'] == target_id].iloc[0]) 
             
     with st.sidebar.expander("🗑️ Delete Batch"):
-        # del_map = {}
-        #    for i, row in df.iterrows():      # i=0, row=1st row
-        #    del_map[row['Batch Name']] = row['id']  # "Python": 1
-           
         del_map = {row['Batch Name']: row['id'] for i, row in df.iterrows()}
         selected_del_name = st.selectbox("Select to Delete", list(del_map.keys()))
         with st.expander(f"🗑️ Delete '{selected_del_name}'?", expanded=False):
-            st.error("⚠️ Are you sure  you want to Delete it ?")
+            st.error("⚠️ Are you sure you want to Delete it ?")
             if st.button("Yes, Delete 🚨"): 
                 del_batches(del_map[selected_del_name])
                 st.success("Deleted!")
                 time.sleep(1)
                 st.rerun()
-# ------------------------------------------------------
-    # --- 🔍 SEARCH & FILTERS PIPELINE ---
-# ------------------------------------------------------
+
     st.divider()
     
-    # Step 1: SEARCH BAR
     search_text = st.text_input("🔍 Search Batches", placeholder="Type Batch Name or ID here...")
     searched_df = search_batches(df, search_text)
     
-    # Step 2: DUAL FILTERS
     col1, col2 = st.columns(2)
     with col1:
         avail_cat = searched_df['Category'].unique().tolist()
@@ -258,29 +207,41 @@ if not df.empty:
         uni_class = ['All Classes'] + avail_classes
         sel_class = st.selectbox("🎓 Filter by Class/Grade", uni_class)
 
-    # Step 3: APPLY FILTERS ON SEARCHED DATA
     filt_df = searched_df.copy() 
     if sel_cat != 'All Categories':
         filt_df = filt_df[filt_df['Category'] == sel_cat]
     if sel_class != 'All Classes':
         filt_df = filt_df[filt_df['Class'] == sel_class]
 
-
-    # --- 📊 DISPLAY RESULTS ---
-    # Metrics
     st.subheader("📋 Dashboard Overview")
     m1, m2 = st.columns(2)
     m1.metric("Total Batches Found", len(filt_df))
     m2.metric("Total Revenue", f"₹{filt_df['Price'].sum():,.0f}")
 
-    # Table
-    st.dataframe(filt_df.drop(columns=['id']), use_container_width=True, hide_index=True)
+    st.subheader("📊 Data Validation")
 
-    # Charts
+    show_missing_only = st.checkbox("⚠️ Batches With 'Missing Details'")
+
+    if show_missing_only:
+        missing_filter = (
+            df['Class'].isna() | (df['Class'] == 'None') | (df['Class'] == '') |
+            df['Price'].isna() | (df['Price'] == 'None') | (df['Price'] == '')
+        )
+        
+        filtered_df = df[missing_filter]
+        
+        if filtered_df.empty:
+            st.success("Great! All batches have complete data.")
+            st.dataframe(df)
+        else:
+            st.warning(f"Warning: {len(filtered_df)} batches have missing details!")
+            st.dataframe(filtered_df)
+    else:
+        st.dataframe(filt_df.drop(columns=['id']), use_container_width=True, hide_index=True)
+
     st.subheader("📈 Performance Analytics")
     chart_col1, chart_col2 = st.columns(2)
     
-    # CHART 1: Category ya Batch Name ke hisaab se (Purana wala)
     with chart_col1:
         if sel_cat == "All Categories":
             st.caption("💰 Revenue By Category")
@@ -289,11 +250,7 @@ if not df.empty:
             st.caption(f"💰 Revenue by Batch ({sel_cat})")
             st.bar_chart(filt_df.set_index('Batch Name')['Price'])
             
-    # Dashboard ke Metrics ke neeche...
-    st.subheader("📋 Dashboard Overview")
-    
-    # Excel Download Logic
-    excel_data = convert_df_to_excel(filt_df) # Filter kiya hua data convert karo
+    excel_data = convert_df_to_excel(filt_df)
     
     st.download_button(
         label="📥 Download Filtered Data as Excel",
@@ -302,13 +259,10 @@ if not df.empty:
         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
             
-    # CHART 2: Class/Grade ke hisaab se (Tumhara Naya Idea!)
     with chart_col2:
         st.caption("🎓 Revenue By Class/Grade")
-        # Ye line jaadu karegi: Class ke hisaab se total revenue nikalegi
         class_revenue = filt_df.groupby('Class')['Price'].sum()
         
-        # Ek chota check: Agar data hai tabhi chart dikhao, warna khali box ajeeb lagega
         if not class_revenue.empty:
             st.bar_chart(class_revenue)
         else:
