@@ -166,7 +166,7 @@ st.title('🎓 Batch Management System')
 
 user_authentication()
 
-if st.button("+", type="primary"):
+if st.button("✢", type="primary"):
     show_add_batch_form()
 
 try:
@@ -280,6 +280,7 @@ if not df.empty:
             st.bar_chart(class_revenue)
         else:
             st.info("No class data available for this filter.")
+
 
 
 
