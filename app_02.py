@@ -169,9 +169,12 @@ def show_edit_batch_form(target_id, current_data):
             time.sleep(1)
             st.rerun()
 
-st.title('🎓 Batch Management System')
+st.title('🎓 BatchMaster')
+st.subheader('Simple, Powerful, Professional.')
+
 
 user_authentication()
+st.ballons()
 
 if st.button("➕", type="primary"):
     show_add_batch_form()
@@ -287,6 +290,7 @@ if not df.empty:
             st.bar_chart(class_revenue)
         else:
             st.info("No class data available for this filter.")
+
 
 
 
